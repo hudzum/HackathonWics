@@ -3,7 +3,7 @@ import { auth } from "../configuration";
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 
 export const useGoogleLogin = () => {
-  const [errorGoogleLogin, setErrorGoogleLogin] = useState(false);
+  const [errorGoogleLogin, setErrorGoogleLogin] = useState<any>(false);
   const [isPendingGoogleLogin, setIsPendingGoogleLogin] = useState(false);
   const provider = new GoogleAuthProvider();
 
@@ -16,7 +16,7 @@ export const useGoogleLogin = () => {
       if (!res) {
         return;
       }
-    } catch (error) {
+    } catch (error :any) {
       setErrorGoogleLogin(error.code);
       await signOut(auth);
     } finally {

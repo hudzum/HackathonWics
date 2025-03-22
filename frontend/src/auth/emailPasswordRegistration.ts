@@ -17,7 +17,7 @@ export const useEmailPasswordRegistration = () => {
       if (!res.user) {
         return;
       }
-    } catch (error) {
+    } catch (error:any) {
       setErrorEmailPasswordRegistration(error.code);
       await signOut(auth);
     } finally {

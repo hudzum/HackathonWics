@@ -16,7 +16,7 @@ export const useEmailPasswordLogin = () => {
       if (!res.user) {
         return;
       }
-    } catch (error) {
+    } catch (error: any) {
       setErrorEmailPasswordLogin(error.code);
       await signOut(auth);
     } finally {

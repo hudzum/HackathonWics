@@ -7,19 +7,18 @@ import { useGoogleLogin } from "./auth/googleLogin";
 import { useEmailPasswordLogin } from "./auth/emailPasswordLogin";
 import { useEmailPasswordRegistration } from "./auth/emailPasswordRegistration";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Wand2, Globe2, Loader2, Shell } from "lucide-react";
+import { Globe2, Shell } from "lucide-react";
 
 const FormSchemaEmailPassword = z.object({
   email: z
