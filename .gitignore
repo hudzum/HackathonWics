@@ -10,6 +10,7 @@ ai-processing/.env
 .env.test.local
 .env.production.local
 
+
 # Logs
 logs/
 *.log
@@ -39,4 +40,4 @@ jspm_packages/
 .DS_Store
 Thumbs.db
 
-frontend/src/configuration.ts
+frontend/.env
