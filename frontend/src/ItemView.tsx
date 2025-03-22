@@ -14,13 +14,8 @@ function ItemView(id:string) {
       try {
         if (!user) return;
         
-        // Query items for this user
-        const q = query(
-          collection(db, "items"), 
-          where("userId", "==", user.uid)
-        );
-        
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = db.collection('items').doc(id).get();
+        console.log()
         const itemsData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()

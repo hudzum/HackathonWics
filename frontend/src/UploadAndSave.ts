@@ -1,5 +1,5 @@
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { doc, setDoc, updateDoc, collection, addDoc } from "firebase/firestore";
+import { doc, setDoc, updateDoc, collection, addDoc, arrayUnion } from "firebase/firestore";
 import { db } from "./configuration"; // Your Firebase config
 
 // Function to handle image upload and save image URL to Firestore
@@ -45,7 +45,15 @@ export async function uploadImageAndSaveData(
         
         // Add to a collection
         const docRef = await addDoc(collection(db, "items"), itemData);
-        
+        const itemId = docRef.id;
+        const itemName = formData.itemName;
+
+        const userRef = doc(db, "users", userId);
+        await updateDoc(userRef, {
+          // arrayUnion adds the value to the array only if it doesn't exist already
+          items: arrayUnion({itemId: itemId, itemName: itemName})
+        });
+
         return {
             success: true,
             id: docRef.id,

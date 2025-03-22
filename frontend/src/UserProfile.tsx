@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from './configuration'; // Your Firebase config
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "./configuration"; // Your Firebase config
 import { useAuthContext } from "./auth/context";
-
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Navbar } from "./Navbar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Sheet,
   SheetClose,
@@ -15,8 +15,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
-import NewGroupForm from './NewGroupForm';
+} from "@/components/ui/sheet";
+import NewGroupForm from "./NewGroupForm";
 
 function UserProfile() {
   const { user } = useAuthContext(); // Get current auth user from context
@@ -59,33 +59,44 @@ function UserProfile() {
   if (!userData) return <div>No user data found</div>;
 
   return (
-    <div>
-      <h1>User Profile</h1>
-      <p>Name: {userData.displayName}</p>
-      <p>Email: {user.email}</p>
+    <>
+      <Navbar />
+      <div>
+        <h1>User Profile</h1>
+        <p>Name: {userData.displayName}</p>
+        <p>Email: {user.email}</p>
+        <h2>Items</h2>
+        {Array.isArray(userData.items) ? (
+          <ul>
+            {userData.items.map((item, index) => (
+              <li key={index}>{item.itemName}</li>
+            ))}
+          </ul>
+        ) : (
+          <p>{userData.items}</p>
+        )}
 
-      <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="outline">Open</Button>
-      </SheetTrigger>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Create A New Fund</SheetTitle>
-          
-        </SheetHeader>
-        <SheetDescription className ="hidden">
-            Create a new fund to start Saving in your future
-        </SheetDescription>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline">Open</Button>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Create A New Fund</SheetTitle>
+            </SheetHeader>
+            <SheetDescription className="hidden">
+              Create a new fund to start Saving in your future
+            </SheetDescription>
             <NewGroupForm />
-        
-          <SheetClose asChild>
-            <Button type="submit">Save changes</Button>
-          </SheetClose>
-       
-      </SheetContent>
-    </Sheet>
-      {/* Display other user data fields from Firestore */}
-    </div>
+
+            <SheetClose asChild>
+              <Button type="submit">Save changes</Button>
+            </SheetClose>
+          </SheetContent>
+        </Sheet>
+        {/* Display other user data fields from Firestore */}
+      </div>
+    </>
   );
 }
 

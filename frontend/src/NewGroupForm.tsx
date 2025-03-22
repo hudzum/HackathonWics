@@ -121,7 +121,10 @@ export default function NewGroupForm() {
             formData,
             user.uid,
           );
+
+          //Adds the id to teh users array of items
           
+
           console.log(result)
           
           toast.dismiss();
