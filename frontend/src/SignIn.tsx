@@ -118,7 +118,7 @@ export default function Home() {
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="leonelngoya@gmail.com" {...field} />
+                        <Input placeholder="JohnDoe@gmail.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
