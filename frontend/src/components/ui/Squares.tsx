@@ -22,7 +22,6 @@ const Squares: React.FC<SquaresProps> = ({
   direction = "right",
   speed = 1,
   squareSize = 40,
-  ...props
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number | null>(null);
@@ -31,9 +30,9 @@ const Squares: React.FC<SquaresProps> = ({
   const gridOffset = useRef<GridOffset>({ x: 0, y: 0 });
   const hoveredSquareRef = useRef<GridOffset | null>(null);
   const { theme } = useTheme();
-  
-  const borderColor = theme === 'dark' ? '#333' : '#e0e0e0';
-  const hoverFillColor = theme === 'dark' ? '#444' : '#f0f0f0';
+
+  const borderColor = theme === "dark" ? "#121212" : "#f5f5f5";
+  const hoverFillColor = theme === "dark" ? "#444" : "#f0f0f0";
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -50,126 +49,36 @@ const Squares: React.FC<SquaresProps> = ({
     resizeCanvas();
 
     // Option 1: Remove gradient entirely
-const drawGrid = () => {
-  if (!ctx) return;
+    const drawGrid = () => {
+      if (!ctx) return;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const startX = Math.floor(gridOffset.current.x / squareSize) * squareSize;
-  const startY = Math.floor(gridOffset.current.y / squareSize) * squareSize;
+      const startX = Math.floor(gridOffset.current.x / squareSize) * squareSize;
+      const startY = Math.floor(gridOffset.current.y / squareSize) * squareSize;
 
-  for (let x = startX; x < canvas.width + squareSize; x += squareSize) {
-    for (let y = startY; y < canvas.height + squareSize; y += squareSize) {
-      const squareX = x - (gridOffset.current.x % squareSize);
-      const squareY = y - (gridOffset.current.y % squareSize);
+      for (let x = startX; x < canvas.width + squareSize; x += squareSize) {
+        for (let y = startY; y < canvas.height + squareSize; y += squareSize) {
+          const squareX = x - (gridOffset.current.x % squareSize);
+          const squareY = y - (gridOffset.current.y % squareSize);
 
-      if (
-        hoveredSquareRef.current &&
-        Math.floor((x - startX) / squareSize) === hoveredSquareRef.current.x &&
-        Math.floor((y - startY) / squareSize) === hoveredSquareRef.current.y
-      ) {
-        ctx.fillStyle = hoverFillColor;
-        ctx.fillRect(squareX, squareY, squareSize, squareSize);
+          if (
+            hoveredSquareRef.current &&
+            Math.floor((x - startX) / squareSize) ===
+              hoveredSquareRef.current.x &&
+            Math.floor((y - startY) / squareSize) === hoveredSquareRef.current.y
+          ) {
+            ctx.fillStyle = hoverFillColor;
+            ctx.fillRect(squareX, squareY, squareSize, squareSize);
+          }
+
+          ctx.strokeStyle = borderColor;
+          ctx.strokeRect(squareX, squareY, squareSize, squareSize);
+        }
       }
 
-      ctx.strokeStyle = borderColor;
-      ctx.strokeRect(squareX, squareY, squareSize, squareSize);
-    }
-  }
-  
-  // Gradient removed entirely
-};
-
-// Option 2: Much smaller gradient
-const drawGridWithSmallerGradient = () => {
-  if (!ctx) return;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  const startX = Math.floor(gridOffset.current.x / squareSize) * squareSize;
-  const startY = Math.floor(gridOffset.current.y / squareSize) * squareSize;
-
-  for (let x = startX; x < canvas.width + squareSize; x += squareSize) {
-    for (let y = startY; y < canvas.height + squareSize; y += squareSize) {
-      const squareX = x - (gridOffset.current.x % squareSize);
-      const squareY = y - (gridOffset.current.y % squareSize);
-
-      if (
-        hoveredSquareRef.current &&
-        Math.floor((x - startX) / squareSize) === hoveredSquareRef.current.x &&
-        Math.floor((y - startY) / squareSize) === hoveredSquareRef.current.y
-      ) {
-        ctx.fillStyle = hoverFillColor;
-        ctx.fillRect(squareX, squareY, squareSize, squareSize);
-      }
-
-      ctx.strokeStyle = borderColor;
-      ctx.strokeRect(squareX, squareY, squareSize, squareSize);
-    }
-  }
-  
-  // Significantly smaller gradient - only covers about 20% of the radius
-  const gradient = ctx.createRadialGradient(
-    canvas.width / 2,
-    canvas.height / 2,
-    0,
-    canvas.width / 2,
-    canvas.height / 2,
-    Math.sqrt(canvas.width ** 2 + canvas.height ** 2) / 10 // Much smaller radius - 1/10th of original
-  );
-  gradient.addColorStop(0, "rgba(0, 0, 0, 0)");
-  gradient.addColorStop(1, "rgba(6, 6, 6, 0.4)"); // Less opacity too
-  
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-};
-
-// Option 3: Make gradient optional with a prop
-const drawGridWithConfigurableGradient = () => {
-  if (!ctx) return;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  const startX = Math.floor(gridOffset.current.x / squareSize) * squareSize;
-  const startY = Math.floor(gridOffset.current.y / squareSize) * squareSize;
-
-  for (let x = startX; x < canvas.width + squareSize; x += squareSize) {
-    for (let y = startY; y < canvas.height + squareSize; y += squareSize) {
-      const squareX = x - (gridOffset.current.x % squareSize);
-      const squareY = y - (gridOffset.current.y % squareSize);
-
-      if (
-        hoveredSquareRef.current &&
-        Math.floor((x - startX) / squareSize) === hoveredSquareRef.current.x &&
-        Math.floor((y - startY) / squareSize) === hoveredSquareRef.current.y
-      ) {
-        ctx.fillStyle = hoverFillColor;
-        ctx.fillRect(squareX, squareY, squareSize, squareSize);
-      }
-
-      ctx.strokeStyle = borderColor;
-      ctx.strokeRect(squareX, squareY, squareSize, squareSize);
-    }
-  }
-  
-  // Only draw gradient if enableGradient prop is true
-  if (enableGradient) {
-    const gradientSize = gradientSize || 0.5; // Default to 50% of original size if not specified
-    const gradient = ctx.createRadialGradient(
-      canvas.width / 2,
-      canvas.height / 2,
-      0,
-      canvas.width / 2,
-      canvas.height / 2,
-      Math.sqrt(canvas.width ** 2 + canvas.height ** 2) / 2 * gradientSize
-    );
-    gradient.addColorStop(0, "rgba(0, 0, 0, 0)");
-    gradient.addColorStop(1, gradientColor || "#060606");
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
-};
+      // Gradient removed entirely
+    };
 
     const updateAnimation = () => {
       const effectiveSpeed = Math.max(speed, 0.1);

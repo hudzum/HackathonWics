@@ -1,47 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import { useAuthContext } from './auth/context'; // Adjust path as needed
-import { collection, query, where, getDocs, documentId } from 'firebase/firestore';
-import { db } from './configuration'; // Adjust path as needed
-import { 
-  Card, 
-  CardContent, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { 
-  ExternalLink, 
-  Calendar, 
-  DollarSign, 
-  Users 
-} from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { 
+import React, { useState, useEffect } from "react";
+import { useAuthContext } from "./auth/context"; // Adjust path as needed
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  documentId,
+  
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "./configuration"; // Adjust path as needed
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ExternalLink, Calendar, DollarSign, Users, Gamepad2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from "@/components/ui/tooltip";
 
-export default function ItemView({ id }) {
-  const [item, setItem] = useState(null);
-  const [loading, setLoading] = useState(true);
+// Define the prop interface
+interface ItemViewProps {
+  id: string;
+}
+
+// Define the item interface
+interface Item {
+  itemName: string;
+  cost: number;
+  imageUrl?: string;
+  itemLink?: string;
+  createdAt: Timestamp;
+  groupMembers?: string[];
+}
+
+export default function ItemView({ id }: ItemViewProps) {
+  const [item, setItem] = useState<Item | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const { user } = useAuthContext();
-  
+
   useEffect(() => {
     async function fetchItems() {
       try {
         if (!user) return;
-        
-        const itemsRef = collection(db, 'items');
-        const q = query(itemsRef, where(documentId(), '==', id));
+
+        const itemsRef = collection(db, "items");
+        const q = query(itemsRef, where(documentId(), "==", id));
         const querySnapshot = await getDocs(q);
-        
+
         if (!querySnapshot.empty) {
-          const docData = querySnapshot.docs[0].data();
+          const docData = querySnapshot.docs[0].data() as Item;
           console.log("Document data:", docData);
           setItem(docData);
         } else {
@@ -53,20 +71,20 @@ export default function ItemView({ id }) {
         setLoading(false);
       }
     }
-    
+
     fetchItems();
   }, [user, id]);
-  
-  function formatDate(timestamp) {
-    if (!timestamp) return 'Unknown date';
+
+  function formatDate(timestamp: Timestamp | undefined): string {
+    if (!timestamp) return "Unknown date";
     const date = new Date(timestamp.seconds * 1000);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   }
-  
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -74,63 +92,73 @@ export default function ItemView({ id }) {
       </div>
     );
   }
-  
+
   if (!item) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Card className="w-full max-w-md p-6">
           <CardHeader>
-            <CardTitle className="text-center text-red-500">Item Not Found</CardTitle>
+            <CardTitle className="text-center text-red-500">
+              Item Not Found
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-center">The requested item could not be found or you don't have permission to view it.</p>
+            <p className="text-center">
+              The requested item could not be found or you don't have permission
+              to view it.
+            </p>
           </CardContent>
         </Card>
       </div>
     );
   }
-  
+
   // Calculate a cost percentage for progress bar (assuming max cost of 1000)
   // Adjust the max value based on your expected cost range
   const costPercentage = Math.min(Math.round((item.cost / 1000) * 100), 100);
 
   console.log("Image URL:", item.imageUrl); // Debug log
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="w-full shadow-lg">
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
-            <CardTitle className="text-2xl font-bold">{item.itemName}</CardTitle>
+            <CardTitle className="text-2xl font-bold">
+              {item.itemName}
+            </CardTitle>
             <Badge variant="outline" className="bg-blue-100">
               ${item.cost}
             </Badge>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Left column with image */}
             <div className="md:col-span-2 h-full flex items-center justify-center">
               {item.imageUrl ? (
-                <a 
-                  href={item.itemLink} 
-                  target="_blank" 
+                <a
+                  href={item.itemLink}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full h-full"
                 >
                   <div className="relative w-full h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden border border-gray-200">
-                    <img 
-                      src={item.imageUrl} 
+                    <img
+                      src={item.imageUrl}
                       alt={item.itemName}
                       className="w-full h-full object-contain"
-                      onError={(e) => {
+                      onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                         console.error("Image failed to load");
-                        e.target.src = "https://via.placeholder.com/400x300?text=Image+Not+Available";
+                        const target = e.target as HTMLImageElement;
+                        target.src =
+                          "https://via.placeholder.com/400x300?text=Image+Not+Available";
                       }}
                     />
                     <div className="absolute bottom-0 right-0 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-tl-md">
-                      <ExternalLink size={14} className="inline mr-1" /> Visit Link
+                      <ExternalLink size={14} className="inline mr-1" /> Visit
+                      Link
                     </div>
                   </div>
                 </a>
@@ -140,32 +168,16 @@ export default function ItemView({ id }) {
                 </div>
               )}
             </div>
-            
+
             {/* Right column with details */}
             <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
-                  <DollarSign size={18} className="text-green-600" /> Cost
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Cost Amount</span>
-                    <span className="font-semibold">${item.cost}</span>
-                  </div>
-                  <Progress value={costPercentage} className="h-2" />
-                  <p className="text-xs text-gray-500">
-                    {costPercentage}% of expected cost range
-                  </p>
-                </div>
-              </div>
-              
               <div>
                 <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
                   <Calendar size={18} className="text-blue-600" /> Created
                 </h3>
                 <p>{formatDate(item.createdAt)}</p>
               </div>
-              
+
               <div>
                 <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
                   <Users size={18} className="text-purple-600" /> Group Members
@@ -193,20 +205,44 @@ export default function ItemView({ id }) {
                   )}
                 </div>
               </div>
+
+              <div>
+                <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
+                  <Gamepad2 size={18} className="text-blue-600" /> Created
+                </h3>
+                <Button>Daily Play</Button>
+              </div>
             </div>
           </div>
+          <div>
+            
+            <div className="">
+              <div className="flex justify-between text-sm">
+                <span>
+                  <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
+                    <DollarSign size={18} className="text-green-600" /> Amount Raised
+                  </h3>
+                </span>
+                <span className="font-semibold">Goal: ${item.cost}</span>
+              </div>
+              <Progress value={costPercentage} className="h-2" />
+              <p className="text-xs text-gray-500">
+                {costPercentage}% of expected goal reached
+              </p>
+
+            </div>
+
+
+          </div>
         </CardContent>
-        
+
         <CardFooter className="pt-2 flex justify-between">
-          <Button 
-            variant="outline" 
-            onClick={() => window.history.back()}
-          >
+          <Button variant="outline" onClick={() => window.history.back()}>
             Back
           </Button>
-          
-          <Button 
-            onClick={() => window.open(item.itemLink, '_blank')}
+
+          <Button
+            onClick={() => window.open(item.itemLink, "_blank")}
             className="flex items-center gap-2"
           >
             Visit Item <ExternalLink size={16} />
