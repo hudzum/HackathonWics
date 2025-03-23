@@ -26,7 +26,7 @@ import { TagsInput } from "@/components/ui/tags-input";
 
 import { useAuthContext } from "./auth/context";
 import { uploadImageAndSaveData } from "./UploadAndSave";
-import {collection, getDocs} from "firebase/firestore";
+import {arrayUnion, collection, doc, getDocs, updateDoc} from "firebase/firestore";
 import {db} from "@/configuration.ts";
 
 const formSchema = z.object({
@@ -100,12 +100,16 @@ export default function NewGroupForm() {
 
         toast.loading("Uploading your item...");
 
+        const otherGroupMembers = [...values.name_2830638755.values()].map(email => usersMapping[email]);
+
         const formData = {
           itemName: values.name_5442261733,
-          groupMembers: [user.uid, ...[...values.name_2830638755.values()].map(email => usersMapping[email])], // Convert to array
+          groupMembers: [user.uid, ...otherGroupMembers], // Convert to array
           itemLink: values.name_6577586194 || null,
           cost: Number(values.name_0795734836),
         };
+
+
 
         // Add the document to the "items" collection
         const result = await uploadImageAndSaveData(
@@ -117,6 +121,14 @@ export default function NewGroupForm() {
 
         //Adds the id to teh users array of items
 
+        for (const otherMember of otherGroupMembers) {
+          console.log("other", otherMember);
+          const itemDocRef = doc(db, "users", otherMember);
+
+          await updateDoc(itemDocRef, {
+            items: arrayUnion({itemId: result.id, itemName: formData.itemName}),
+          });
+        }
         console.log(result);
 
         toast.dismiss();
@@ -193,33 +205,35 @@ export default function NewGroupForm() {
           </FileUploaderContent>
         </FileUploader>
 
-        <FormField
-          control={form.control}
-          name="name_2830638755"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Enter Emails</FormLabel>
-              <FormControl>
-                {
-                  (Object.keys(usersMapping || {}).length > 0) && (
-                        <TagsInput
-                            value={field.value}
-                            onValueChange={emails => {
-                              console.log(emails, usersMapping);
-                              const goodEmails = emails.filter(email => email in usersMapping);
-                              if (goodEmails.length !== emails.length) alert('User with email does not exist');
+        {
+          (Object.keys(usersMapping || {}).length > 0) ? (
+              <FormField
+                  control={form.control}
+                  name="name_2830638755"
+                  render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Enter Emails</FormLabel>
+                        <FormControl>
+                          <TagsInput
+                              value={field.value}
+                              onValueChange={emails => {
+                                console.log(emails, usersMapping);
+                                const goodEmails = emails.filter(email => email in usersMapping);
+                                if (goodEmails.length !== emails.length) alert('User with email does not exist');
 
-                              field.onChange(goodEmails);
-                            }}
-                            placeholder="Enter your group members emails"
-                        />
-                    )
-                }
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                                field.onChange(goodEmails);
+                              }}
+                              placeholder="Enter your group members emails"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                  )}
+              />
+              ) : (
+              <p>Loading Emails</p>
+          )
+        }
 
         <FormField
           control={form.control}

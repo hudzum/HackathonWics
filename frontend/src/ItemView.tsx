@@ -6,8 +6,8 @@ import {
   where,
   getDocs,
   documentId,
-  
-  Timestamp,
+
+  Timestamp, doc, arrayUnion, updateDoc,
 } from "firebase/firestore";
 import { db } from "./configuration"; // Adjust path as needed
 import {
@@ -28,6 +28,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {GAME_SERVER_CREATE, GAME_SERVER_PLAY} from "@/GAME_SERVER.ts";
+import {SnakeGame, SnakeGameProps} from "@/snake/SnakeGame.tsx";
 
 // Define the prop interface
 interface ItemViewProps {
@@ -40,14 +42,50 @@ interface Item {
   cost: number;
   imageUrl?: string;
   itemLink?: string;
+  // mapping of user ids to amount contributed
+  contributions?: { [user_id: string]: number };
   createdAt: Timestamp;
   groupMembers?: string[];
+  gameIds?: { created_by: string, game_id: string, time_created: number }[];
 }
 
 export default function ItemView({ id }: ItemViewProps) {
   const [item, setItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const { user } = useAuthContext();
+
+  const [snakeProps, setSnakeProps] = useState<{
+    didCreate: boolean,
+    props: Omit<SnakeGameProps, "onOver">
+  } | undefined>(undefined);
+
+  console.log(snakeProps);
+
+  const [allUsers, setAllUsers] = useState<{ [key: string]: string; } | undefined>(undefined);
+
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      try {
+        const usersCollectionRef = collection(db, "users");
+        const querySnapshot = await getDocs(usersCollectionRef);
+
+        const usersMapping: { [key: string]: string } = {}; // Mapping of user IDs to display names
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.displayName) {
+            usersMapping[doc.id] = data.displayName;
+          }
+        });
+
+        setAllUsers(usersMapping);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    fetchAllUsers();
+  }, []);
+
 
   useEffect(() => {
     async function fetchItems() {
@@ -115,9 +153,54 @@ export default function ItemView({ id }: ItemViewProps) {
 
   // Calculate a cost percentage for progress bar (assuming max cost of 1000)
   // Adjust the max value based on your expected cost range
-  const costPercentage = Math.min(Math.round((item.cost / 1000) * 100), 100);
+  const costPercentage = (item.contributions ? Object.values(item.contributions).reduce((s, t) => s + t, 0) / item.cost * 100: 0).toFixed(0);
 
   console.log("Image URL:", item.imageUrl); // Debug log
+
+  function dailyPlay() {
+    if (!item?.groupMembers) alert("No group members found");
+    else {
+      fetch(
+          GAME_SERVER_CREATE,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({"api_token": "secret_token", "user_ids": item.groupMembers})
+          }
+      ).then(res => res.json()).then(async (data) => {
+        if (data.type !== "Success") alert("error: " + JSON.stringify(data));
+        else {
+          const game_id: Item['gameIds'][number] = { created_by: user?.uid, game_id:  data.game_id, time_created: Date.now() };
+
+          if (id) {
+            const itemDocRef = doc(db, "items", id);
+
+            await updateDoc(itemDocRef, {
+              gameIds: arrayUnion(game_id),
+            });
+
+            // playgame
+            setSnakeProps({
+              didCreate: true,
+              props: {
+                game_id: game_id.game_id,
+                all_users: Object.fromEntries(Object.entries(allUsers || {}).filter(([uuid]) => item.groupMembers!.includes(uuid))),
+                access_token: user!.uid!,
+                user_id: user!.uid!,
+                url: GAME_SERVER_PLAY
+              }
+            });
+          } else {
+            console.error("Item ID is missing. Unable to update gameIds.");
+            alert("Error: Unable to link game to the item.");
+          }
+        }
+      })
+    }
+  }
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -210,7 +293,30 @@ export default function ItemView({ id }: ItemViewProps) {
                 <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
                   <Gamepad2 size={18} className="text-blue-600" /> Created
                 </h3>
-                <Button>Daily Play</Button>
+                <div style={{display: 'flex', flexDirection: 'column', placeItems: 'flex-start'}}>
+                  <Button onClick={dailyPlay}>Daily Play</Button>
+
+                  {item && allUsers && item.gameIds && item.gameIds.map(({game_id, created_by, time_created}) => (
+                    <a key={game_id} style={{textDecoration: 'underline'}} onClick={() => {
+                      setSnakeProps({
+                        didCreate: false,
+                        props: {
+                          game_id,
+                          user_id: user!.uid!,
+                          access_token: user!.uid!,
+                          url: GAME_SERVER_PLAY,
+                          all_users: Object.fromEntries(Object.entries(allUsers).filter(([uuid]) => item.groupMembers!.includes(uuid)))
+                        }
+                      })
+                    }}>
+                  Game created by {allUsers[created_by]} at {new Date(time_created).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit'
+                })}
+                </a>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -229,6 +335,37 @@ export default function ItemView({ id }: ItemViewProps) {
               <p className="text-xs text-gray-500">
                 {costPercentage}% of expected goal reached
               </p>
+
+
+              <div className="mt-4 border-t pt-4">
+                <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
+                  <Users size={18} className="text-green-600"/> Contributions
+                </h3>
+                {item?.contributions && Object.keys(item.contributions).length > 0 ? (
+                    <table className="table-auto w-full border-collapse border border-gray-200 text-sm">
+                      <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border border-gray-300 px-4 py-2 text-left">Contributor</th>
+                        <th className="border border-gray-300 px-4 py-2 text-right">Amount ($)</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      {Object.entries(item.contributions).map(([contributorId, amount], index) => (
+                          <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                            <td className="border border-gray-300 px-4 py-2">
+                              {allUsers[contributorId] || "Unknown"}
+                            </td>
+                            <td className="border border-gray-300 px-4 py-2 text-right">
+                              {amount.toFixed(2)}
+                            </td>
+                          </tr>
+                      ))}
+                      </tbody>
+                    </table>
+                ) : (
+                    <p className="text-sm text-gray-500">No contributions yet</p>
+                )}
+              </div>
 
             </div>
 
@@ -257,6 +394,31 @@ export default function ItemView({ id }: ItemViewProps) {
         <p>Item Link: {item.itemLink || "No link"}</p>
       </div>
       */}
+
+      {
+        snakeProps && (
+            <div style={{position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'grid', placeItems: 'center'}}>
+              <SnakeGame {...snakeProps.props} onOver={contributions => setTimeout(async () => {
+                
+                setSnakeProps(undefined);
+                if (snakeProps?.didCreate) {
+                  const itemDocRef = doc(db, "items", id);
+
+                  const newContibutions = {...(item?.contributions || {})};
+                  for (const contrib of contributions) {
+                    newContibutions[contrib.user_id] = (newContibutions[contrib.user_id] || 0) + contrib.amount_spent;
+                  }
+
+                  await updateDoc(itemDocRef, {
+                    contributions: newContibutions,
+                  });
+                }
+
+                window.location.reload();
+              }, 5000)} />
+            </div>
+          )
+      }
     </div>
   );
 }

@@ -14,7 +14,8 @@ export interface SnakeGameProps {
 	all_users: { [key: string]: string },
 	access_token: string,
 	game_id: string,
-	url: string
+	url: string,
+	onOver: (results: AmountSpent[]) => void,
 }
 
 const SNAKE_COLORS = [
@@ -130,36 +131,48 @@ export const SnakeGame: React.FC<SnakeGameProps> = props => {
 				setReadyStates('started');
 			} else if (msg.type === "GameOver") {
 				setGameOver(msg);
+				props.onOver(msg.amounts_spent);
 			}
 		})
 
-		document.body.addEventListener('keydown', ev => {
+		const evList = ev => {
 			// console.log(ev.code);
 
 			if (ev.code === 'ArrowUp') {
 				send({
 					type: "SetDirection",
-					direction: { type: "Up" }
+					direction: {type: "Up"}
 				})
 			} else if (ev.code === 'ArrowDown') {
 				send({
 					type: "SetDirection",
-					direction: { type: "Down" }
+					direction: {type: "Down"}
 				})
 			} else if (ev.code === 'ArrowLeft') {
 				send({
 					type: "SetDirection",
-					direction: { type: "Left" }
+					direction: {type: "Left"}
 				})
 			} else if (ev.code === 'ArrowRight') {
 				send({
 					type: "SetDirection",
-					direction: { type: "Right" }
+					direction: {type: "Right"}
 				})
 			}
-		})
+		};
+		document.body.addEventListener('keydown', evList);
+
+		console.log("remve");
+		return () => {
+			console.log("here");
+			ws.close();
+			socket.current = undefined;
+			document.body.removeEventListener('keydown', evList);
+		}
 
 	}, []);
+
+	console.log(props);
 
 	// console.log(props.all_users);
 
@@ -180,7 +193,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = props => {
 	console.log(gameOver);
 
 	return (
-		<div style={{width: '100%', height: '100%', position: 'relative', display: 'grid', justifyItems: 'center', alignItems: 'start', gridTemplateRows: '1fr min-content', gridTemplateColumns: '1fr 300px', gridTemplateAreas: '"game recent" "power ."', gap: 10}}>
+		<div style={{background: 'white', padding: 20, borderRadius: 10, position: 'relative', display: 'grid', justifyItems: 'center', alignItems: 'start', gridTemplateRows: '1fr min-content', gridTemplateColumns: '1fr 300px', gridTemplateAreas: '"game recent" "power recent"', gap: 10}}>
 			{
 					readyStates === 'started' ? (
 						<>
