@@ -49,6 +49,8 @@ export const SnakeGame: React.FC<SnakeGameProps> = props => {
 	const [readyStates, setReadyStates] = useState<ReadyStatus[] | 'started'>([]);
 	const [recentPowerups, setRecentPowerups] = useState<RecentPowerUp[]>([]);
 
+	const [gameStartedAt, setGameStartedAt] = useState(0);
+
 	function send(msg: ClientMessage) {
 		socket.current?.send(JSON.stringify(msg));
 	}
@@ -80,11 +82,18 @@ export const SnakeGame: React.FC<SnakeGameProps> = props => {
 			if (msg.type === "GameState") {
 				const g = ref.current?.getContext("2d");
 				if (g) {
-					g.clearRect(0, 0, 100, 50);
+					g.clearRect(0, 0, 1000, 500);
 
 					g.fillStyle = "red";
 					for (const apple of msg.apples) {
-						g.fillRect(apple[0], apple[1], 1, 1);
+						g.fillRect(apple[0] * 10, apple[1] * 10, 10, 10);
+					}
+
+					for (const snake of msg.snakes) {
+						if (snake.type === "Alive") {
+							g.fillStyle = SNAKE_COLORS[orderedKeys.indexOf(snake.user_id)];
+							g.strokeText(props.all_users[snake.user_id], snake.head[0] * 10 - 25, snake.head[1] * 10 + 40, 50);
+						}
 					}
 
 					for (const snake of msg.snakes) {
@@ -109,15 +118,15 @@ export const SnakeGame: React.FC<SnakeGameProps> = props => {
 								else throw new Error("Unknown direction");
 
 								for (let i = 0; i < len; i++) {
-									g.fillRect(head[0], head[1], 1, 1);
-									head = [head[0] + deltaHead[0], head[1] + deltaHead[1]];
+									g.fillRect(head[0] * 10, head[1] * 10, 10, 10);
+									head = [(head[0] + deltaHead[0] + 100) % 100, (head[1] + deltaHead[1] + 50) % 50];
 								}
 							}
 
 							g.fillStyle = SNAKE_COLORS[orderedKeys.indexOf(snake.user_id)];
 							if (snake.has_extra_life) g.fillStyle = "magenta";
 							else if (snake.frozen) g.fillStyle = "gray";
-							g.fillRect(snake.head[0], snake.head[1], 1, 1);
+							g.fillRect(snake.head[0] * 10, snake.head[1] * 10, 10, 10);
 						}
 					}
 				}
@@ -129,6 +138,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = props => {
 				setReadyStates(msg.status);
 			} else if (msg.type === "StartGame") {
 				setReadyStates('started');
+				setGameStartedAt(Date.now());
 			} else if (msg.type === "GameOver") {
 				setGameOver(msg);
 				props.onOver(msg.amounts_spent);
@@ -260,7 +270,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = props => {
 								)
 							}
 
-							<canvas width="100" height="50" style={{gridArea: "game", width: '100%', imageRendering: 'pixelated', border: '1px solid black'}} ref={ref}>
+							<canvas width="1000" height="500" style={{gridArea: "game", width: '100%', imageRendering: 'pixelated', border: '1px solid black'}} ref={ref}>
 
 							</canvas>
 
