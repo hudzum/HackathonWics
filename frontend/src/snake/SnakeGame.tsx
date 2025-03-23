@@ -137,6 +137,8 @@ export const SnakeGame: React.FC<SnakeGameProps> = props => {
 
 		const evList = ev => {
 			// console.log(ev.code);
+			ev.stopPropagation();
+			ev.preventDefault();
 
 			if (ev.code === 'ArrowUp') {
 				send({

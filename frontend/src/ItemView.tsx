@@ -411,6 +411,7 @@ export default function ItemView({ id }: ItemViewProps) {
 
                   await updateDoc(itemDocRef, {
                     contributions: newContibutions,
+                    gameIds: []
                   });
                 }
 
