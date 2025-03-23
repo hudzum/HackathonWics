@@ -82,7 +82,8 @@ export default function FrontPage() {
                 </Sheet>
               
 
-                <Button variant="secondary">
+                <Button variant="secondary" onClick={() => window.open("https://github.com/your-repo-link", "_blank")}
+    >
                   Github Repository <FolderGit2 className="ml-2 w-5 h-5" />
                 </Button>
               </div>

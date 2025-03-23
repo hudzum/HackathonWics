@@ -50,7 +50,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = props => {
 	const [readyStates, setReadyStates] = useState<ReadyStatus[] | 'started'>([]);
 	const [recentPowerups, setRecentPowerups] = useState<RecentPowerUp[]>([]);
 
-	const [gameStartedAt, setGameStartedAt] = useState(0);
+	const [, setGameStartedAt] = useState(0);
 
 	function send(msg: ClientMessage) {
 		socket.current?.send(JSON.stringify(msg));
@@ -146,7 +146,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = props => {
 			}
 		})
 
-		const evList = ev => {
+		const evList = (ev:KeyboardEvent) => {
 			// console.log(ev.code);
 			ev.stopPropagation();
 			ev.preventDefault();

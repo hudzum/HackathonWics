@@ -100,7 +100,7 @@ export default function NewGroupForm() {
 
         toast.loading("Uploading your item...");
 
-        const otherGroupMembers = [...values.name_2830638755.values()].map(email => usersMapping[email]);
+        const otherGroupMembers = [...values.name_2830638755.values()].map(email => email in (usersMapping ?? {}));
 
         const formData = {
           itemName: values.name_5442261733,
@@ -218,7 +218,7 @@ export default function NewGroupForm() {
                               value={field.value}
                               onValueChange={emails => {
                                 console.log(emails, usersMapping);
-                                const goodEmails = emails.filter(email => email in usersMapping);
+                                const goodEmails = emails.filter(email => email in (usersMapping ?? {}));
                                 if (goodEmails.length !== emails.length) alert('User with email does not exist');
 
                                 field.onChange(goodEmails);

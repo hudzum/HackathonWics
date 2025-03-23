@@ -154,8 +154,8 @@ export default function ItemView({ id }: ItemViewProps) {
 
   // Calculate a cost percentage for progress bar (assuming max cost of 1000)
   // Adjust the max value based on your expected cost range
-  const costPercentage = (item.contributions ? Object.values(item.contributions).reduce((s, t) => s + t, 0) / item.cost * 100: 0).toFixed(0);
-
+  const costPercentage = item.contributions ? Math.round(Object.values(item.contributions).reduce((s, t) => s + t, 0) / item.cost * 100) : 0;
+  
   console.log("Image URL:", item.imageUrl); // Debug log
 
   function dailyPlay() {
@@ -176,7 +176,19 @@ export default function ItemView({ id }: ItemViewProps) {
       ).then(res => res.json()).then(async (data) => {
         if (data.type !== "Success") alert("error: " + JSON.stringify(data));
         else {
-          const game_id: Item['gameIds'][number] = { prize, created_by: user?.uid, game_id:  data.game_id, time_created: Date.now() };
+          type GameIdType = {
+            prize: string;
+            created_by: string | undefined;
+            game_id: string;
+            time_created: number;
+          };
+          
+          const game_id: GameIdType = { 
+            prize, 
+            created_by: user?.uid, 
+            game_id: data.game_id, 
+            time_created: Date.now() 
+          };
 
           if (id) {
             const itemDocRef = doc(db, "items", id);
@@ -360,7 +372,7 @@ export default function ItemView({ id }: ItemViewProps) {
                       {Object.entries(item.gameResults).map(([_, {winner, prize}], index) => (
                           <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                             <td className="border border-gray-300 px-4 py-2">
-                              {allUsers[winner] || "Unknown"}
+                            {allUsers ? allUsers[winner] ?? "Unknown" : "Unkown"}
                             </td>
                             <td className="border border-gray-300 px-4 py-2 text-right">
                               {prize}
@@ -390,7 +402,7 @@ export default function ItemView({ id }: ItemViewProps) {
                       {Object.entries(item.contributions).map(([contributorId, amount], index) => (
                           <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                             <td className="border border-gray-300 px-4 py-2">
-                              {allUsers[contributorId] || "Unknown"}
+                              {allUsers ? allUsers[contributorId] ?? "Unknown" : "Unkown"}
                             </td>
                             <td className="border border-gray-300 px-4 py-2 text-right">
                               {amount.toFixed(2)}
