@@ -1,12 +1,29 @@
-## How to set up project
+# CoinCache 🏦🎮
 
-Hello team, I just wanted to give a brief rundown on how to setup the project for those who are new to using docker.
+CoinCache is a financial awareness app designed to make saving money a fun and collaborative experience. Whether you're splitting the cost of a new couch 🛋️ with roommates or saving up for a group trip ✈️, CoinCache helps you create shared funds while engaging in interactive games that contribute directly to your savings goals.
 
-1. Make sure you have the docker application installed
-2. Sign up / Sign in to Docker
-3. Clone the Github Repo to your local workspace
-4. CD into the root of the project folder
-5. Run "docker-compose up --build" (Builds and runs all our containers/services i.e. frontend, backend, database)
-6. It may take a few minutes to start up, but afterwards you should be able to see all the containers running individually (on the docker app).
-7. Everytime you make a change or want to stop running you will need to run docker-compose down to stop close all the containers.
-8. Note: (You can of course develop within your own local compartments without running every container)
+🌐 Visit us at [coincache.tech](https://coincache.tech)
+
+## Features ✨
+- **Group Funds 💰:** Create shared savings pools for specific goals with friends, family, or roommates.
+- **Gamified Savings 🎲:** Play fun and engaging mini-games that contribute real money to your fund.
+- **Transparency & Tracking 📊:** Keep track of contributions and progress towards your goal.
+- **Secure Transactions 🔒:** Built with Rust and Google Auth for reliability and security.
+
+## Technologies Used 🛠️
+- **React.js ⚛️** - Frontend framework for a smooth user experience.
+- **Rust 🦀** - Backend for secure and efficient fund management.
+- **Three.js 🎨** - Provides interactive 3D elements for an engaging UI.
+- **Shadcn 🖌️** - UI components for a clean and modern design.
+
+## Why CoinCache? 🤔💡
+Financial awareness is crucial, yet saving money can often feel like a chore. CoinCache turns saving into an exciting, interactive, and social experience. By gamifying financial responsibility, we encourage better money habits while making it a fun challenge for everyone involved.
+
+## Get Started 🚀
+1. **Sign up** and create a fund.
+2. **Invite friends** to contribute.
+3. **Play games** to add funds.
+4. **Reach your goal** and enjoy your collective savings! 🎉
+
+Join us in redefining financial awareness—one game at a time! 🏆
+
