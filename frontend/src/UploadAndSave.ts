@@ -1,5 +1,5 @@
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { doc, setDoc, updateDoc, collection, addDoc, arrayUnion } from "firebase/firestore";
+import { doc, updateDoc, collection, addDoc, arrayUnion } from "firebase/firestore";
 import { db } from "./configuration"; // Your Firebase config
 
 // Function to handle image upload and save image URL to Firestore

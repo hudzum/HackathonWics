@@ -38,7 +38,6 @@ const FormSchemaEmailPassword = z.object({
 });
 
 export default function SignIn() {
-
   const { user } = useAuthContext();
   const { googleLogin, isPendingGoogleLogin } = useGoogleLogin();
   const {
@@ -52,7 +51,6 @@ export default function SignIn() {
     isPendingEmailPasswordRegistration,
   } = useEmailPasswordRegistration();
 
-
   const formEmailPassword = useForm<z.infer<typeof FormSchemaEmailPassword>>({
     resolver: zodResolver(FormSchemaEmailPassword),
   });
@@ -62,34 +60,31 @@ export default function SignIn() {
   ) {
     await emailPasswordLogin(data.email, data.password);
   }
+  
   async function onSubmitEmailPasswordRegistration(
     data: z.infer<typeof FormSchemaEmailPassword>
   ) {
     await emailPasswordRegistration(data.email, data.password);
   }
 
- 
-
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center px-6 py-12">
+    <main className="relative flex flex-col items-center justify-center px-6 py-8">
       <div className="w-full md:w-2/3 lg:w-1/2">
         {user ? (
-          <div className="w-full flex flex-col items-center gap-4">
+          <div className="w-full flex flex-col items-center gap-6">
             <h1 className="text-center text-xl font-bold">Connected !</h1>
-            <p>
+            <p className="text-lg">
               Hey{" "}
               <b className="italic underline underline-offset-4">
                 {user.email}
               </b>{" "}
               👋
             </p>
-            
-            
           </div>
         ) : (
-          <div className="content-center">
+          <div className="content-center space-y-6">
             <Button
-          
+              className="w-full py-6"
               type="button"
               onClick={googleLogin}
               disabled={
@@ -105,17 +100,18 @@ export default function SignIn() {
               )}
               Sign in with Google
             </Button>
-            <span className="flex font-semibold items-center justify-center my-6">
-              OR
-            </span>
+            
+            <div className="flex items-center justify-center my-8">
+              <span className="font-semibold">OR</span>
+            </div>
         
             <Form {...formEmailPassword}>
-              <form className="w-full space-y-6">
+              <form className="w-full space-y-8">
                 <FormField
                   control={formEmailPassword.control}
                   name="email"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-6">
                       <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input placeholder="JohnDoe@gmail.com" {...field} />
@@ -124,11 +120,12 @@ export default function SignIn() {
                     </FormItem>
                   )}
                 />
+                
                 <FormField
                   control={formEmailPassword.control}
                   name="password"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="mb-6">
                       <FormLabel>Password</FormLabel>
                       <FormControl>
                         <Input
@@ -141,9 +138,10 @@ export default function SignIn() {
                     </FormItem>
                   )}
                 />
-                <div className="w-full flex items-center gap-2">
+                
+                <div className="w-full flex flex-col items-center gap-4">
                   <Button
-                    className=""
+                    className="w-full py-5"
                     type="button"
                     disabled={
                       isPendingGoogleLogin ||
@@ -159,8 +157,9 @@ export default function SignIn() {
                     )}
                     Login
                   </Button>
+                  
                   <Button
-                    className=""
+                    className="w-full py-5"
                     type="button"
                     disabled={
                       isPendingGoogleLogin ||
@@ -177,9 +176,10 @@ export default function SignIn() {
                     Register
                   </Button>
                 </div>
+                
                 {(errorEmailPasswordLogin ||
                   errorEmailPasswordRegistration) && (
-                  <span className="text-red-500 text-center text-sm block mt-4 font-semibold">
+                  <span className="text-red-500 text-center text-sm block mt-6 font-semibold">
                     {errorEmailPasswordLogin ===
                       "auth/invalid-login-credentials" &&
                       "Invalid email or password"}
@@ -194,7 +194,6 @@ export default function SignIn() {
           </div>
         )}
       </div>
-
     </main>
   );
 }
