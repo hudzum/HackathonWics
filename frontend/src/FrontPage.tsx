@@ -82,7 +82,7 @@ export default function FrontPage() {
                 </Sheet>
               
 
-                <Button variant="secondary" onClick={() => window.open("https://github.com/your-repo-link", "_blank")}
+                <Button variant="secondary" onClick={() => window.open("https://github.com/hudzum/HackathonWics", "_blank")}
     >
                   Github Repository <FolderGit2 className="ml-2 w-5 h-5" />
                 </Button>
