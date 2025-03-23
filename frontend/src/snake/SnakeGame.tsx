@@ -260,10 +260,10 @@ export const SnakeGame: React.FC<SnakeGameProps> = props => {
 												>
 													<span style={{fontWeight: 'bold', fontSize: '1rem'}}>{props.all_users[player]}</span>
 													<span>
-						{new Intl.NumberFormat('en-US', {
-							style: 'currency',
-							currency: 'USD',
-						}).format(gameOver.amounts_spent.find(({user_id}) => user_id === player)?.amount_spent)}
+													{new Intl.NumberFormat('en-US', { 
+												style: 'currency', 
+												currency: 'USD'
+												}).format(gameOver.amounts_spent.find(({user_id}) => user_id === player)?.amount_spent || 0)}
 					</span>
 												</div>
 											))}

@@ -100,7 +100,9 @@ export default function NewGroupForm() {
 
         toast.loading("Uploading your item...");
 
-        const otherGroupMembers = [...values.name_2830638755.values()].map(email => email in (usersMapping ?? {}));
+        const otherGroupMembers = [...values.name_2830638755.values()]
+        .map(email => usersMapping?.[email])
+        .filter(userId => userId !== undefined);
 
         const formData = {
           itemName: values.name_5442261733,
