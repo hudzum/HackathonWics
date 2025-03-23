@@ -108,8 +108,7 @@ function Model({
   useFrame(({ clock }) => {
     if (enableTiltAnimation && group.current) {
       const t = clock.getElapsedTime();
-      group.current.rotation.x = rotation[0] + Math.sin(t * 0.5) * 0.05;
-      group.current.rotation.y = rotation[1] + Math.sin(t * 0.3) * 0.05;
+      group.current.rotation.y = rotation[1] + Math.sin(t * 0.3) * 1.05;
     }
   });
 
