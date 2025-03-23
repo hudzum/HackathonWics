@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Calendar, DollarSign, Users, Gamepad2 } from "lucide-react";
+import {ExternalLink, Calendar, DollarSign, Users, Gamepad2, Trophy} from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -46,7 +46,8 @@ interface Item {
   contributions?: { [user_id: string]: number };
   createdAt: Timestamp;
   groupMembers?: string[];
-  gameIds?: { created_by: string, game_id: string, time_created: number }[];
+  gameIds?: { created_by: string, game_id: string, time_created: number, prize: string }[];
+  gameResults?: { winner: string, prize: string }[];
 }
 
 export default function ItemView({ id }: ItemViewProps) {
@@ -160,6 +161,9 @@ export default function ItemView({ id }: ItemViewProps) {
   function dailyPlay() {
     if (!item?.groupMembers) alert("No group members found");
     else {
+      const prize = prompt("What will the prize for this game be?");
+      if (!prize) return;
+
       fetch(
           GAME_SERVER_CREATE,
           {
@@ -172,7 +176,7 @@ export default function ItemView({ id }: ItemViewProps) {
       ).then(res => res.json()).then(async (data) => {
         if (data.type !== "Success") alert("error: " + JSON.stringify(data));
         else {
-          const game_id: Item['gameIds'][number] = { created_by: user?.uid, game_id:  data.game_id, time_created: Date.now() };
+          const game_id: Item['gameIds'][number] = { prize, created_by: user?.uid, game_id:  data.game_id, time_created: Date.now() };
 
           if (id) {
             const itemDocRef = doc(db, "items", id);
@@ -189,7 +193,8 @@ export default function ItemView({ id }: ItemViewProps) {
                 all_users: Object.fromEntries(Object.entries(allUsers || {}).filter(([uuid]) => item.groupMembers!.includes(uuid))),
                 access_token: user!.uid!,
                 user_id: user!.uid!,
-                url: GAME_SERVER_PLAY
+                url: GAME_SERVER_PLAY,
+                prize
               }
             });
           } else {
@@ -291,16 +296,17 @@ export default function ItemView({ id }: ItemViewProps) {
 
               <div>
                 <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
-                  <Gamepad2 size={18} className="text-blue-600" /> Created
+                  <Gamepad2 size={18} className="text-blue-600" /> Play Now
                 </h3>
                 <div style={{display: 'flex', flexDirection: 'column', placeItems: 'flex-start'}}>
-                  <Button onClick={dailyPlay}>Daily Play</Button>
+                  <Button onClick={dailyPlay}>Create a Lobby</Button>
 
-                  {item && allUsers && item.gameIds && item.gameIds.map(({game_id, created_by, time_created}) => (
+                  {item && allUsers && item.gameIds && item.gameIds.map(({game_id, created_by, time_created, prize}) => (
                     <a key={game_id} style={{textDecoration: 'underline'}} onClick={() => {
                       setSnakeProps({
                         didCreate: false,
                         props: {
+                          prize,
                           game_id,
                           user_id: user!.uid!,
                           access_token: user!.uid!,
@@ -309,6 +315,7 @@ export default function ItemView({ id }: ItemViewProps) {
                         }
                       })
                     }}>
+                      <b>Prize: {prize}</b><br/>
                   Game created by {allUsers[created_by]} at {new Date(time_created).toLocaleTimeString([], {
                   hour: '2-digit',
                   minute: '2-digit',
@@ -339,7 +346,37 @@ export default function ItemView({ id }: ItemViewProps) {
 
               <div className="mt-4 border-t pt-4">
                 <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
-                  <Users size={18} className="text-green-600"/> Contributions
+                  <Trophy size={18} className="text-purple-600"/> Prizes
+                </h3>
+                {item?.gameResults && Object.keys(item.gameResults).length > 0 ? (
+                    <table className="table-auto w-full border-collapse border border-gray-200 text-sm">
+                      <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border border-gray-300 px-4 py-2 text-left">Winner</th>
+                        <th className="border border-gray-300 px-4 py-2 text-right">Prize</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      {Object.entries(item.gameResults).map(([_, {winner, prize}], index) => (
+                          <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                            <td className="border border-gray-300 px-4 py-2">
+                              {allUsers[winner] || "Unknown"}
+                            </td>
+                            <td className="border border-gray-300 px-4 py-2 text-right">
+                              {prize}
+                            </td>
+                          </tr>
+                      ))}
+                      </tbody>
+                    </table>
+                ) : (
+                    <p className="text-sm text-gray-500">No games yet</p>
+                )}
+              </div>
+              
+              <div className="mt-4 border-t pt-4">
+                <h3 className="text-lg font-medium mb-2 flex items-center gap-2">
+                  <Users size={18} className="text-blue-600"/> Contributions
                 </h3>
                 {item?.contributions && Object.keys(item.contributions).length > 0 ? (
                     <table className="table-auto w-full border-collapse border border-gray-200 text-sm">
@@ -398,20 +435,24 @@ export default function ItemView({ id }: ItemViewProps) {
       {
         snakeProps && (
             <div style={{position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'grid', placeItems: 'center'}}>
-              <SnakeGame {...snakeProps.props} onOver={contributions => setTimeout(async () => {
+              <SnakeGame {...snakeProps.props} onOver={({winner,results}) => setTimeout(async () => {
                 
                 setSnakeProps(undefined);
                 if (snakeProps?.didCreate) {
                   const itemDocRef = doc(db, "items", id);
 
                   const newContibutions = {...(item?.contributions || {})};
-                  for (const contrib of contributions) {
+                  for (const contrib of results) {
                     newContibutions[contrib.user_id] = (newContibutions[contrib.user_id] || 0) + contrib.amount_spent;
                   }
 
+                  console.log(newContibutions, {winner, prize: snakeProps.props.prize});
+
                   await updateDoc(itemDocRef, {
                     contributions: newContibutions,
-                    gameIds: []
+                    gameIds: [],
+                    gameResults: arrayUnion({winner, prize: snakeProps.props.prize}),
+
                   });
                 }
 

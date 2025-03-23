@@ -15,7 +15,8 @@ export interface SnakeGameProps {
 	access_token: string,
 	game_id: string,
 	url: string,
-	onOver: (results: AmountSpent[]) => void,
+	onOver: (results: {results: AmountSpent[], winner: string}) => void,
+	prize: string
 }
 
 const SNAKE_COLORS = [
@@ -141,7 +142,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = props => {
 				setGameStartedAt(Date.now());
 			} else if (msg.type === "GameOver") {
 				setGameOver(msg);
-				props.onOver(msg.amounts_spent);
+				props.onOver({results: msg.amounts_spent, winner: msg.winner});
 			}
 		})
 
@@ -229,6 +230,7 @@ export const SnakeGame: React.FC<SnakeGameProps> = props => {
 									>
 										<h1 style={{fontSize: '3rem', fontWeight: 'bold', marginBottom: '20px'}}>Game Over!</h1>
 										<h2 style={{fontSize: '2rem', marginBottom: '20px'}}>Winner: <b>{props.all_users[gameOver.winner]}</b></h2>
+										<h2 style={{fontSize: '2rem', marginBottom: '20px'}}>Prize: <u>{props.prize}</u></h2>
 
 										<div
 											style={{
