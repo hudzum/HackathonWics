@@ -26,6 +26,8 @@ import { TagsInput } from "@/components/ui/tags-input";
 
 import { useAuthContext } from "./auth/context";
 import { uploadImageAndSaveData } from "./UploadAndSave";
+import {collection, getDocs} from "firebase/firestore";
+import {db} from "@/configuration.ts";
 
 const formSchema = z.object({
   name_5442261733: z.string().min(1),
@@ -39,6 +41,23 @@ export default function NewGroupForm() {
   const { user } = useAuthContext();
 
   const [files, setFiles] = useState<File[] | null>(null);
+  const [usersMapping, setUsersMapping] = useState<{ [email: string]: string } | undefined>({});
+
+  useEffect(() => {
+    (async () => {
+      const usersCollectionRef = collection(db, "users");
+      const querySnapshot = await getDocs(usersCollectionRef);
+
+      const usersMapping: { [email: string]: string } = {}; // Mapping of emails to user ids
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.email) {
+          usersMapping[data.email] = doc.id;
+        }
+      });
+      setUsersMapping(usersMapping);
+    })();
+  }, []);
 
   const dropZoneConfig = {
     maxFiles: 1,
@@ -51,7 +70,7 @@ export default function NewGroupForm() {
       name_5442261733: "Couch",
       name_6577586194: "couchlink",
       name_0795734836: "300",
-      name_2830638755: ["test@gmail.com"],
+      name_2830638755: [],
     },
   });
 
@@ -83,7 +102,7 @@ export default function NewGroupForm() {
 
         const formData = {
           itemName: values.name_5442261733,
-          groupMembers: values.name_2830638755, // Convert to array
+          groupMembers: [user.uid, ...[...values.name_2830638755.values()].map(email => usersMapping[email])], // Convert to array
           itemLink: values.name_6577586194 || null,
           cost: Number(values.name_0795734836),
         };
@@ -104,6 +123,7 @@ export default function NewGroupForm() {
         toast.success("Item added successfully!");
 
         // You might want to navigate or clear the form here
+        window.location.reload();
       };
 
       saveToFirebase();
@@ -180,11 +200,21 @@ export default function NewGroupForm() {
             <FormItem>
               <FormLabel>Enter Emails</FormLabel>
               <FormControl>
-                <TagsInput
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  placeholder="Enter your group members emails"
-                />
+                {
+                  (Object.keys(usersMapping || {}).length > 0) && (
+                        <TagsInput
+                            value={field.value}
+                            onValueChange={emails => {
+                              console.log(emails, usersMapping);
+                              const goodEmails = emails.filter(email => email in usersMapping);
+                              if (goodEmails.length !== emails.length) alert('User with email does not exist');
+
+                              field.onChange(goodEmails);
+                            }}
+                            placeholder="Enter your group members emails"
+                        />
+                    )
+                }
               </FormControl>
               <FormMessage />
             </FormItem>
